@@ -59,14 +59,14 @@
 (define-public (pause-campaign (campaign-id uint))
   (begin
     (asserts! (is-admin) ERR-NOT-AUTHORIZED)
-    (as-contract (contract-call? .campaign-state update-campaign-status campaign-id .campaign-state STATUS-PAUSED))
+    (try! (as-contract (contract-call? .campaign-state update-campaign-status campaign-id u4)))
     (ok true)))
 
 ;; Unpause a specific campaign
 (define-public (unpause-campaign (campaign-id uint))
   (begin
     (asserts! (is-admin) ERR-NOT-AUTHORIZED)
-    (as-contract (contract-call? .campaign-state update-campaign-status campaign-id .campaign-state STATUS-ACTIVE))
+    (try! (as-contract (contract-call? .campaign-state update-campaign-status campaign-id u1)))
     (ok true)))
 
 ;; Calculate fee for an amount
@@ -77,6 +77,6 @@
 (define-public (withdraw-fees (amount uint))
   (begin
     (asserts! (is-admin) ERR-NOT-AUTHORIZED)
-    (as-contract (stx-transfer? amount tx-sender (var-get platform-treasury)))
+    (try! (as-contract (stx-transfer? amount tx-sender (var-get platform-treasury))))
     (print {event: "fee-withdrawal", amount: amount, treasury: (var-get platform-treasury)})
     (ok true)))

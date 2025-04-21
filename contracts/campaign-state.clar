@@ -67,6 +67,11 @@
   (let ((current-id (var-get campaign-id-nonce))
         (deadline (contract-call? .time-utils add-duration-to-now duration)))
     (asserts! (is-eq contract-caller .campaign-core) (err u401))
+
+    ;; Validate inputs
+    (asserts! (> goal-amount u0) (err u400))
+    (asserts! (> duration u0) (err u400))
+
     (map-set campaigns current-id {
       creator: creator,
       title: title,
@@ -80,33 +85,42 @@
     (var-set campaign-id-nonce (+ current-id u1))
     (ok current-id)))
 
+(define-read-only (get-campaign-data (campaign-id uint))
+  (map-get? campaigns campaign-id))
+
 (define-public (record-pledge (campaign-id uint) (backer principal) (amount uint))
-  (let ((campaign (unwrap! (map-get? campaigns campaign-id) (err ERR-CAMPAIGN-NOT-FOUND)))
-        (current-pledge (get-pledge campaign-id backer))
-        (new-total-amount (+ (get current-amount campaign) amount))
-        (new-backer-count (if (is-eq current-pledge u0)
-                            (+ (get backer-count campaign) u1)
-                            (get backer-count campaign))))
+  (let ((campaign-opt (get-campaign-data campaign-id)))
+    (asserts! (is-some campaign-opt) ERR-CAMPAIGN-NOT-FOUND)
     (asserts! (is-eq contract-caller .campaign-core) (err u401))
-    (map-set campaigns campaign-id (merge campaign {
-      current-amount: new-total-amount,
-      backer-count: new-backer-count
-    }))
-    (map-set pledges {campaign-id: campaign-id, backer: backer} (+ current-pledge amount))
-    (ok true)))
+
+    (let ((campaign-data (unwrap-panic campaign-opt))
+          (current-pledge (get-pledge campaign-id backer))
+          (new-total-amount (+ (get current-amount campaign-data) amount))
+          (new-backer-count (if (is-eq current-pledge u0)
+                              (+ (get backer-count campaign-data) u1)
+                              (get backer-count campaign-data))))
+      (map-set campaigns campaign-id (merge campaign-data {
+        current-amount: new-total-amount,
+        backer-count: new-backer-count
+      }))
+      (map-set pledges {campaign-id: campaign-id, backer: backer} (+ current-pledge amount))
+      (ok true))))
 
 (define-public (update-campaign-status (campaign-id uint) (new-status uint))
-  (let ((campaign (unwrap! (map-get? campaigns campaign-id) (err ERR-CAMPAIGN-NOT-FOUND))))
+  (let ((campaign-opt (get-campaign-data campaign-id)))
+    (asserts! (is-some campaign-opt) ERR-CAMPAIGN-NOT-FOUND)
     (asserts! (is-eq contract-caller .campaign-core) (err u401))
     (asserts! (or (is-eq new-status STATUS-ACTIVE)
-                 (is-eq new-status STATUS-FUNDED)
-                 (is-eq new-status STATUS-EXPIRED)
-                 (is-eq new-status STATUS-PAUSED))
+                (is-eq new-status STATUS-FUNDED)
+                (is-eq new-status STATUS-EXPIRED)
+                (is-eq new-status STATUS-PAUSED))
              ERR-INVALID-STATUS)
-    (map-set campaigns campaign-id (merge campaign {status: new-status}))
-    (ok true)))
+
+    (let ((campaign-data (unwrap-panic campaign-opt)))
+      (map-set campaigns campaign-id (merge campaign-data {status: new-status}))
+      (ok true))))
 
 (define-public (get-campaign-creator (campaign-id uint))
-  (match (map-get? campaigns campaign-id)
-    campaign (ok (get creator campaign))
-    (err ERR-CAMPAIGN-NOT-FOUND)))
+  (let ((campaign-opt (get-campaign-data campaign-id)))
+    (asserts! (is-some campaign-opt) ERR-CAMPAIGN-NOT-FOUND)
+    (ok (get creator (unwrap-panic campaign-opt)))))

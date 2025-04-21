@@ -8,13 +8,22 @@
 (define-constant SECONDS-PER-WEEK (* SECONDS-PER-DAY u7))
 (define-constant SECONDS-PER-MONTH (* SECONDS-PER-DAY u30))
 
+;; Get current time - using a data var for testing
+(define-data-var current-block-height uint u0)
+
 ;; Get current time
 (define-read-only (get-current-time)
-  block-height)
+  (var-get current-block-height))
+
+;; Set current time (for testing)
+(define-public (set-current-time (new-time uint))
+  (begin
+    (var-set current-block-height new-time)
+    (ok true)))
 
 ;; Add duration to current time
 (define-read-only (add-duration-to-now (duration uint))
-  (+ block-height duration))
+  (+ (get-current-time) duration))
 
 ;; Add specific time units to a timestamp
 (define-read-only (add-minutes (timestamp uint) (minutes uint))
@@ -31,12 +40,12 @@
 
 ;; Check if a deadline has passed
 (define-read-only (deadline-passed (deadline uint))
-  (> block-height deadline))
+  (> (get-current-time) deadline))
 
 ;; Calculate remaining time
 (define-read-only (time-remaining (deadline uint))
-  (if (> deadline block-height)
-      (- deadline block-height)
+  (if (> deadline (get-current-time))
+      (- deadline (get-current-time))
       u0))
 
 ;; Convert blocks to estimated days

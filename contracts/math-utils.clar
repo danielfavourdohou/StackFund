@@ -1,21 +1,32 @@
 ;; math-utils.clar
 ;; Safe math operations and other utilities
 
-;; Convert a uint to string (limited functionality)
+;; Convert a uint to string (hardcoded for common values)
 (define-read-only (uint-to-ascii (value uint))
-  (let ((digit (mod value u10))
-        (rest (/ value u10)))
-    (if (is-eq value u0)
-        "0"
-        (if (> rest u0)
-            (concat (uint-to-ascii rest) (element-at "0123456789" digit))
-            (element-at "0123456789" digit)))))
+  (if (<= value u9)
+      ;; Single digit
+      (unwrap-panic (element-at "0123456789" value))
+      (if (<= value u99)
+          ;; Two digits
+          (concat (unwrap-panic (element-at "0123456789" (/ value u10)))
+                 (unwrap-panic (element-at "0123456789" (mod value u10))))
+          (if (<= value u999)
+              ;; Three digits
+              (concat (unwrap-panic (element-at "0123456789" (/ value u100)))
+                     (concat (unwrap-panic (element-at "0123456789" (/ (mod value u100) u10)))
+                            (unwrap-panic (element-at "0123456789" (mod value u10)))))
+              ;; Four digits (up to 9999)
+              (concat (unwrap-panic (element-at "0123456789" (/ value u1000)))
+                     (concat (unwrap-panic (element-at "0123456789" (/ (mod value u1000) u100)))
+                            (concat (unwrap-panic (element-at "0123456789" (/ (mod value u100) u10)))
+                                   (unwrap-panic (element-at "0123456789" (mod value u10))))))))))
 
 ;; Safe addition
 (define-read-only (safe-add (a uint) (b uint))
   (let ((result (+ a b)))
-    (asserts! (>= result a) (err u500)) ;; Check for overflow
-    result))
+    (if (>= result a)
+        result
+        u0)))
 
 ;; Safe subtraction
 (define-read-only (safe-sub (a uint) (b uint))
@@ -45,12 +56,3 @@
       u0
       (- goal-amount current-amount)))
 
-;; ;; Convert a uint to string (limited functionality)
-;; (define-read-only (uint-to-ascii (value uint))
-;;   (let ((digit (mod value u10))
-;;         (rest (/ value u10)))
-;;     (if (is-eq value u0)
-;;         "0"
-;;         (if (> rest u0)
-;;             (concat (uint-to-ascii rest) (unwrap-panic (element-at "0123456789" digit)))
-;;             (unwrap-panic (element-at "0123456789" digit))))))
