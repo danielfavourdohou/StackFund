@@ -1,30 +1,82 @@
+;; admin-and-fees.clar
+;; Admin controls and fee management
 
-;; title: admin-and-fees
-;; version:
-;; summary:
-;; description:
+;; Error constants
+(define-constant ERR-NOT-AUTHORIZED (err u401))
+(define-constant ERR-INVALID-PARAMETER (err u400))
 
-;; traits
-;;
+;; Data variables
+(define-data-var admin principal tx-sender)
+(define-data-var platform-fee-percentage uint u5) ;; 5% default fee
+(define-data-var platform-treasury principal tx-sender)
+(define-data-var emergency-pause bool false)
 
-;; token definitions
-;;
+;; Read-only functions
+(define-read-only (get-admin)
+  (var-get admin))
 
-;; constants
-;;
+(define-read-only (get-platform-fee)
+  (var-get platform-fee-percentage))
 
-;; data vars
-;;
+(define-read-only (get-treasury)
+  (var-get platform-treasury))
 
-;; data maps
-;;
+(define-read-only (is-paused)
+  (var-get emergency-pause))
 
-;; public functions
-;;
+;; Admin authorization check
+(define-private (is-admin)
+  (is-eq tx-sender (var-get admin)))
 
-;; read only functions
-;;
+;; Admin capabilities
+(define-public (set-admin (new-admin principal))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (var-set admin new-admin)
+    (ok true)))
 
-;; private functions
-;;
+(define-public (set-platform-fee (new-fee uint))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (asserts! (<= new-fee u20) ERR-INVALID-PARAMETER) ;; Fee can't be more than 20%
+    (var-set platform-fee-percentage new-fee)
+    (ok true)))
 
+(define-public (set-treasury (new-treasury principal))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (var-set platform-treasury new-treasury)
+    (ok true)))
+
+;; Emergency pause
+(define-public (set-emergency-pause (paused bool))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (var-set emergency-pause paused)
+    (ok true)))
+
+;; Pause a specific campaign
+(define-public (pause-campaign (campaign-id uint))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (as-contract (contract-call? .campaign-state update-campaign-status campaign-id .campaign-state STATUS-PAUSED))
+    (ok true)))
+
+;; Unpause a specific campaign
+(define-public (unpause-campaign (campaign-id uint))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (as-contract (contract-call? .campaign-state update-campaign-status campaign-id .campaign-state STATUS-ACTIVE))
+    (ok true)))
+
+;; Calculate fee for an amount
+(define-read-only (calculate-fee (amount uint))
+  (contract-call? .math-utils percentage-of amount (var-get platform-fee-percentage)))
+
+;; Withdraw fees to treasury
+(define-public (withdraw-fees (amount uint))
+  (begin
+    (asserts! (is-admin) ERR-NOT-AUTHORIZED)
+    (as-contract (stx-transfer? amount tx-sender (var-get platform-treasury)))
+    (print {event: "fee-withdrawal", amount: amount, treasury: (var-get platform-treasury)})
+    (ok true)))

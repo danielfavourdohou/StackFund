@@ -10,8 +10,8 @@ path = 'contracts/admin-and-fees.clar'
 clarity_version = 3
 epoch = 3.1
 
-[contracts.bearer-token]
-path = 'contracts/bearer-token.clar'
+[contracts.backer-token]
+path = 'contracts/backer-token.clar'
 clarity_version = 3
 epoch = 3.1
 
