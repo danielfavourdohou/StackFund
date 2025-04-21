@@ -1,21 +1,49 @@
 [project]
-name = "stackfund"
-description = ""
+name = 'stackfund'
+description = ''
 authors = []
 telemetry = true
-cache_dir = "./.cache"
+cache_dir = './.cache'
+requirements = []
+[contracts.admin-and-fees]
+path = 'contracts/admin-and-fees.clar'
+clarity_version = 3
+epoch = 3.1
 
-# [contracts.counter]
-# path = "contracts/counter.clar"
+[contracts.bearer-token]
+path = 'contracts/bearer-token.clar'
+clarity_version = 3
+epoch = 3.1
 
+[contracts.campaign-core]
+path = 'contracts/campaign-core.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.campaign-state]
+path = 'contracts/campaign-state.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.interface]
+path = 'contracts/interface.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.math-utils]
+path = 'contracts/math-utils.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.time-utils]
+path = 'contracts/time-utils.clar'
+clarity_version = 3
+epoch = 3.1
 [repl.analysis]
-passes = ["check_checker"]
-check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
+passes = ['check_checker']
 
-# Check-checker settings:
-# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
-# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
-# callee_filter: if true, untrusted data may be passed into a private function without a
-# warning, if it gets checked inside. This check will also propagate up to the
-# caller.
-# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
