@@ -1,0 +1,49 @@
+[project]
+name = 'stackfund'
+description = ''
+authors = []
+telemetry = true
+cache_dir = './.cache'
+requirements = []
+[contracts.admin-and-fees]
+path = 'contracts/admin-and-fees.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.backer-token]
+path = 'contracts/backer-token.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.campaign-core]
+path = 'contracts/campaign-core.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.campaign-state]
+path = 'contracts/campaign-state.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.interface]
+path = 'contracts/interface.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.math-utils]
+path = 'contracts/math-utils.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.time-utils]
+path = 'contracts/time-utils.clar'
+clarity_version = 3
+epoch = 3.1
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
