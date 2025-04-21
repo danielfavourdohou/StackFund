@@ -27,7 +27,7 @@
   (ok (var-get token-id-nonce)))
 
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (concat "https://stackfund.xyz/token/" (uint-to-ascii token-id)))))
+  (ok (some (concat "https://stackfund.xyz/token/" (contract-call? .math-utils uint-to-ascii token-id)))))
 
 (define-read-only (get-owner (token-id uint))
   (ok (nft-get-owner? backer-token token-id)))

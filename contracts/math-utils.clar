@@ -1,6 +1,16 @@
 ;; math-utils.clar
 ;; Safe math operations and other utilities
 
+;; Convert a uint to string (limited functionality)
+(define-read-only (uint-to-ascii (value uint))
+  (let ((digit (mod value u10))
+        (rest (/ value u10)))
+    (if (is-eq value u0)
+        "0"
+        (if (> rest u0)
+            (concat (uint-to-ascii rest) (element-at "0123456789" digit))
+            (element-at "0123456789" digit)))))
+
 ;; Safe addition
 (define-read-only (safe-add (a uint) (b uint))
   (let ((result (+ a b)))
@@ -35,12 +45,12 @@
       u0
       (- goal-amount current-amount)))
 
-;; Convert a uint to string (limited functionality)
-(define-read-only (uint-to-ascii (value uint))
-  (let ((digit (mod value u10))
-        (rest (/ value u10)))
-    (if (is-eq value u0)
-        "0"
-        (if (> rest u0)
-            (concat (uint-to-ascii rest) (unwrap-panic (element-at "0123456789" digit)))
-            (unwrap-panic (element-at "0123456789" digit))))))
+;; ;; Convert a uint to string (limited functionality)
+;; (define-read-only (uint-to-ascii (value uint))
+;;   (let ((digit (mod value u10))
+;;         (rest (/ value u10)))
+;;     (if (is-eq value u0)
+;;         "0"
+;;         (if (> rest u0)
+;;             (concat (uint-to-ascii rest) (unwrap-panic (element-at "0123456789" digit)))
+;;             (unwrap-panic (element-at "0123456789" digit))))))
